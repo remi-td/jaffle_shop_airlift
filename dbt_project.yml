@@ -1,0 +1,21 @@
+
+name: 'jaffle_shop_teradata'
+version: '0.1'
+config-version: 2
+profile: 'jaffle_shop_teradata'
+model-paths: ["models"]
+analysis-paths: ["analysis"]
+test-paths: ["tests"]
+seed-paths: ["data"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets:
+    - "target"
+    - "dbt_modules"
+    - "logs"
+
+vars:
+  last_update_ts: 'last_update_ts'
+
+# comment 2
