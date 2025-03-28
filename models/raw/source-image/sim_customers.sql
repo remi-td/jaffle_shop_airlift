@@ -31,19 +31,12 @@ This also enables us to handle back-dated corrections from the source systems
 without having to re-build the entire history forward.
 -*/#}
 
-{{
-  config(
-    unique_key=['customer_id'],
-    valid_from='last_update_ts',
-    valid_period='valid_period',
-    materialized='incremental',
-    incremental_strategy='valid_history',
-    use_valid_to_time='no',
-    enable_deltas='yes'
-  )
-}}
 
-with prepared_source_image as ( 
-  {{ build_source_image (source_table='stg_customers', config=config) }}
-)
-select * from prepared_source_image
+{{ config(
+    materialized='otf_materialize',
+    datalake='aws_glue_catalog',
+    datalake_database='sbx'
+) }}
+
+SELECT *
+from {{ ref('stg_payments') }} s

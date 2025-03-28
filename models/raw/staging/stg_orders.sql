@@ -18,4 +18,4 @@ select
     ,
     current_timestamp {{var('last_update_ts')}}
     {%- endif %}
-from {{ ref('raw_orders') }} source
+from {{ source('s3_object_storage', 'raw_orders_nos') }} source

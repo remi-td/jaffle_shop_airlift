@@ -17,4 +17,4 @@ source.*
 {%- if  var('last_update_ts') %}
 ,'{{ run_started_at }}' (timestamp) {{var('last_update_ts')}}
 {%- endif %}
-from {{ source('s3_object_storage', 'raw_payments_nos') }} source
+from {{ source('s3_object_storage', 'raw_product_catalog_nos') }} source
