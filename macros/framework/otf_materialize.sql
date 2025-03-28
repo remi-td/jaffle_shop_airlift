@@ -53,14 +53,21 @@
 
   {% endif %}
 
-  {% if adapter.get_relation(this.database, this.schema, identifier='__tmp_' ~ this.identifier)  is not none %}
-    {% call statement('pre_cleanup') %}
-        DROP TABLE {{ this.schema }}.__tmp_{{ this.identifier }}
-    {% endcall %}
+  {% if execute %}
+    {% set check_sql %}
+      sel count(1) from dbc.tablesV where tablename='__tmp_{{ this.identifier }}' and databasename=user
+    {% endset %}
+    {% set result = run_query(check_sql) %}
+    {% if result and result.columns[0].values()[0] | int > 0 %}
+        {% call statement('pre_cleanup') %}
+            DROP TABLE __tmp_{{ this.identifier }}
+        {% endcall %}
+    {% endif %}
+
   {% endif %}
 
   {% call statement('pre') %}
-    CREATE TABLE {{ this.schema }}.__tmp_{{ this.identifier }}
+    CREATE TABLE __tmp_{{ this.identifier }}
     AS (
       {{ sql }}
     )
@@ -68,7 +75,7 @@
   {% endcall %}
 
   {% call statement('main') %}
-    CREATE TABLE {{ datalake }}.{{ database }}.{{ this.identifier }} AS {{ this.schema }}.__tmp_{{ this.identifier }} WITH DATA;
+    CREATE TABLE {{ datalake }}.{{ database }}.{{ this.identifier }} AS __tmp_{{ this.identifier }} WITH DATA;
   {% endcall %}
 
   {% call statement('post') %}

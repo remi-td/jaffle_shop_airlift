@@ -19,7 +19,7 @@
 {%-
   set surrogate_keys={
       'customer':{
-        'source_table': 'sim_customers',
+        'source_table': 'raw_customers',
         'key_table': 'key_customer',
         'natural_key_cols': ['email'],
         'domain': 'retail',
@@ -49,8 +49,8 @@ with source as
   select
   s.*  
   ,coalesce(c.email,'UNKNOWN') email
-  from {{ ref('sim_orders') }} s
-  left join {{ ref('sim_customers') }} c
+  from {{ ref('raw_orders') }} s
+  left join {{ ref('raw_customers') }} c
     on c.customer_id=s.user_id
     and c.valid_period contains current_timestamp
 )
