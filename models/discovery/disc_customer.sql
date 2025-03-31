@@ -38,8 +38,8 @@
     incremental_strategy='delete+insert',
     unique_key='customer_key',
     pre_hook=surrogate_keys_hook
-
-) }}
+    ) 
+}}
 
 SELECT 
 s.*
