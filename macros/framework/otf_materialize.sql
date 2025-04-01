@@ -27,7 +27,23 @@
 
   {#-- Retrieve custom configurations --#}
   {%- set datalake = config.get('datalake') -%}
-  {%- set database = config.get('datalake_database') -%}
+  {%- set target_db = config.get('datalake_database') -%}
+  {#-- If scratch_database is defined in the variables, we will use it to store the temporary data, 
+    otherwise use the current database --#}
+  {%- set scratch_database = var('scratch_database', default=None) -%}
+  {% if not scratch_database %}
+    {% set current_db_query = "select database" %}
+    {% set current_db_result = run_query(current_db_query) %}
+    {% if execute and current_db_result and current_db_result.columns[0].values()|length > 0 %}
+        {% set scratch_database = current_db_result.columns[0].values()[0] %}
+    {% endif %}
+  {% endif %}
+
+
+  {#-- If we don't have a scratch_database value and the current database couldn't be identified,
+       the temporary table name won't be fully qualified.
+   --#}
+  {% set scratch_prefix = scratch_database ~ '.' if scratch_database else "" %}
 
   {#-- Execute pre-hooks defined on the model --#}
   {{ run_hooks(pre_hooks) }}
@@ -35,7 +51,7 @@
   {#-- Check for an existing target table using custom logic --#}
   {% set target_relation = teradata__get_relation_otf(
       datalake=datalake,
-      database=database,
+      database=target_db,
       identifier=this.identifier
     ) %}
   {% set exists = target_relation is not none %}
@@ -46,51 +62,56 @@
   {% if target_relation is not none %}
     {{ log("Debugging: Dropping existing OTF table", info=True) }}
     {% call statement('drop_otf_target') %}
-      DROP TABLE {{ datalake }}.{{ database }}.{{ this.identifier }} PURGE ALL;
+      DROP TABLE {{ datalake }}.{{ target_db }}.{{ this.identifier }} PURGE ALL;
     {% endcall %}
   {% else %}
     {% set target_relation = api.Relation.create(
       database=datalake,
-      schema=database,
+      schema=target_db,
       identifier=this.identifier,
       type='table'
     ) %}
   {% endif %}
 
-  {#-- Optional pre-cleanup: Drop any temporary table left from a previous run --#}
+  {#-- Optional pre-cleanup: Drop any temporary table from a previous run in the scratch area --#}
   {% if execute %}
     {% set check_sql %}
-      SEL COUNT(1) FROM dbc.tablesV WHERE tablename='__tmp_{{ this.identifier }}' AND databasename=user
+      SEL count(1) FROM dbc.tablesV 
+      WHERE lower(tablename)=lower('__tmp_{{ this.identifier }}')
+      AND lower(databasename)=lower({% if scratch_database %}'{{ scratch_database }}'{% else %}database{% endif %})
     {% endset %}
     {% set result = run_query(check_sql) %}
+
     {% if result and result.columns[0].values()[0] | int > 0 %}
       {% call statement('pre_cleanup') %}
-        DROP TABLE __tmp_{{ this.identifier }};
+        DROP TABLE {{ scratch_prefix }}__tmp_{{ this.identifier }};
       {% endcall %}
     {% endif %}
   {% endif %}
 
-  {#-- Create a temporary table for staging model output --#}
+  {#-- Create a temporary table in the designated scratch location for staging model output --#}
   {% call statement('pre') %}
-    CREATE TABLE __tmp_{{ this.identifier }} AS (
+    CREATE TABLE {{ scratch_prefix }}__tmp_{{ this.identifier }} AS (
       {{ sql }}
     ) WITH DATA;
   {% endcall %}
 
   {#-- Create the final target table from the temporary table --#}
   {% call statement('main') %}
-    CREATE TABLE {{ datalake }}.{{ database }}.{{ this.identifier }} AS __tmp_{{ this.identifier }} WITH DATA;
+    CREATE TABLE {{ datalake }}.{{ target_db }}.{{ this.identifier }} AS 
+      {{ scratch_prefix }}__tmp_{{ this.identifier }}
+    WITH DATA;
   {% endcall %}
 
   {#-- Drop the temporary table after successful creation --#}
   {% call statement('post') %}
-    DROP TABLE __tmp_{{ this.identifier }};
+    DROP TABLE {{ scratch_prefix }}__tmp_{{ this.identifier }};
   {% endcall %}
 
   {#-- Execute post-hooks defined on the model --#}
   {{ run_hooks(post_hooks) }}
 
-  {#-- Persist model documentation into your warehouse metadata --#}
+  {#-- Persist model documentation into the warehouse metadata --#}
   {% do persist_docs(target_relation, model) %}
 
   {{ return({'relations': [target_relation]}) }}
