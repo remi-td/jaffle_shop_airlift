@@ -8,13 +8,14 @@ All we do is:
 
 {#/*- 
 In this example we are loading from a seed, 
-we mock the record update time with a static value 
+we mock the record update time with the read current time
 (in order toto illustrate delta capture downstream) 
 -*/#}
 locking row for access
 select
-source.*
-{%- if  var('last_update_ts') %}
-,'{{ run_started_at }}' (timestamp) {{var('last_update_ts')}}
-{%- endif %}
-from  {{ ref('raw_payments') }} source
+    source.*
+    {%- if  var('last_update_ts') -%}
+    ,
+    current_timestamp {{var('last_update_ts')}}
+    {%- endif %}
+from {{ source('s3_object_storage', 'raw_orders_nos') }} source

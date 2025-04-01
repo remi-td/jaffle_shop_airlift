@@ -1,0 +1,61 @@
+{% macro teradata__get_relation_otf(datalake, database, identifier) %}
+    -- Custom logic to interface with Iceberg metadata
+    {% set sql %}
+        HELP DATABASE {{ datalake }}.{{ database }}
+    {% endset %}
+    {% set result = run_query(sql) %}
+    {% if execute %}
+        {% set table_names = result.columns[0].values() %}
+        {{ log("Debugging: Tables in OTF database: " ~ result.columns[0].values(), info=True) }}
+        {% if identifier in table_names %}
+            {{ log("Debugging: Table already exists", info=True) }}
+            {% do return(api.Relation.create(
+                database=datalake,
+                schema=database,
+                identifier=identifier,
+                type='table'
+            )) %}
+        {% else %}
+            {% do return(None) %}
+        {% endif %}
+    {% else %}
+        {% do return(None) %}
+    {% endif %}
+{% endmacro %}
+
+{% materialization otf_materialize, adapter='teradata' %}
+
+  {%- set datalake = config.get('datalake') -%}
+  {%- set iceberg_database = config.get('iceberg_database') -%}
+
+  {% set target_relation = teradata__get_relation_otf(
+    datalake=datalake,
+    database=iceberg_database,
+    identifier=this.identifier
+  ) %}
+
+  {% set exists = target_relation is not none %}
+  {{ log("Debugging: Target relation: " ~ exists, info=True) }}
+  {% if exists %}
+    DROP TABLE {{ database }}.{{ database }}.{{ identifier }};
+  {% endif %}
+
+  {% call statement('pre') %}
+    CREATE TABLE __tmp_{{ this.identifier }}
+    AS (
+      {{ sql }}
+    )
+    WITH DATA;
+  {% endcall %}
+
+  {% call statement('main') %}
+    CREATE TABLE {{ datalake }}.{{ iceberg_database }}.{{ this.identifier }} AS __tmp_{{ this.identifier }} WITH DATA;
+  {% endcall %}
+
+  {% call statement('post') %}
+    DROP TABLE __tmp_{{ this.identifier }};
+  {% endcall %}
+
+  {{ return({'relations': [target_relation]}) }}
+
+{% endmaterialization %}

@@ -1,0 +1,75 @@
+version: 2
+
+sources:
+  - name: s3_object_storage
+    schema: "airliftuser01" #This is the database in which our foreign objects reside
+    tables:
+      - name: raw_customers_nos   
+        description: "Raw customer data"
+        columns:
+          - name: Location
+            description: "Location of the source file"
+          - name: id
+            description: "Source system's customer id"
+        external:
+          location: "/s3/architecture-airlift-2025.s3.amazonaws.com/raw/raw_jaffle_customers.parquet"
+          file_format: "parquet"                  
+      - name: raw_payments_nos   
+        description: "Raw payment data"
+        columns:
+          - name: Location
+            description: "Location of the source file"
+          - name: order_id
+            description: "Source system's related order id"
+        external:
+          location: "/s3/architecture-airlift-2025.s3.amazonaws.com/raw/raw_jaffle_payments.parquet"
+          file_format: "parquet"                  
+      - name: raw_orders_nos   
+        description: "Raw order data"
+        columns:
+          - name: Location
+            description: "Location of the source file"
+          - name: id
+            description: "Source system's order id"
+        external:
+          location: "/s3/architecture-airlift-2025.s3.amazonaws.com/raw/raw_jaffle_orders.parquet"
+          file_format: "parquet"             
+      - name: raw_product_catalog_nos   
+        description: "Raw product catalog data"
+        columns:
+          - name: Location
+            description: "Location of the source file"
+          - name: order_id
+            description: "Source system's product id"
+        external:
+          location: "/s3/architecture-airlift-2025.s3.amazonaws.com/raw/raw_jaffle_product_catalog.parquet"
+          file_format: "parquet"                                 
+models:
+  - name: stg_customers
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_orders
+    columns:
+      - name: id
+        tests:
+          - unique
+          - not_null
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
+
+  - name: stg_payments
+    columns:
+      - name: id
+        tests:
+          - unique
+          - not_null
+      - name: payment_method
+        tests:
+          - accepted_values:
+              values: ['credit_card', 'coupon', 'bank_transfer', 'gift_card']

@@ -19,4 +19,4 @@ sel
   payment_method,
   --`amount` is currently stored in cents, so we convert it to dollars
   amount / 100 as amount_usd
-  from {{ ref('sim_payments') }} s
+  from {{ ref('raw_payments') }} s

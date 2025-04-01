@@ -21,33 +21,38 @@
 {%-
   set surrogate_keys={
       'customer':{
-        'source_table': 'sim_customers',
+        'source_table': 'raw_customers',
         'key_table': 'key_customer',
         'natural_key_cols': ['email'],
         'domain': 'retail',
-      },
-      'family':{
-        'source_table': 'sim_customers',
-        'key_table': 'key_customer',
-        'natural_key_cols': ['last_name'],
-        'domain': 'families',
-        'mask': True
       }
     }
 -%}
 
-{# Define the apply strategy and generate key in pre-hook #}
-{{
-  config(
-    materialized='incremental',
+{%- set surrogate_keys_hook = generate_surrogate_key_hook(surrogate_keys) -%}
+
+{{ config(
+    materialized='otf_materialize',
+    datalake='aws_glue_catalog',
+    datalake_database='sbx',
     incremental_strategy='delete+insert',
     unique_key='customer_key',
-    pre_hook=generate_surrogate_key_hook(surrogate_keys)
-  )
+    pre_hook=surrogate_keys_hook
+    ) 
 }}
 
-{#-
-In most cases we want to perform a 1:1 projection from source image to lightly integrated, 
-and simply add keys. This macro does just that.
-#}
-{{build_light_integrated( ref('sim_customers'), surrogate_keys)}}
+SELECT 
+s.*
+--Surrogate key columns
+{%- for sk, params in surrogate_keys.items() %}
+,coalesce({{sk}}.{{ params['key_table'].split('_', 1)[1] }}_key,-1) {{sk}}_key
+{%- endfor %}
+from {{ ref('raw_customers') }} s
+--Surrogate key joins 
+-- this is a generic block code unpacking the surrogate key definitions in this model 
+-- and appending it to the list of columns in the target entity
+{%- for sk, params in surrogate_keys.items() %}
+left join {{ref(params['key_table'])}} {{sk}}
+  on {{sk}}.{{ params['key_table'].split('_', 1)[1] }}_nk={{generate_natural_key(params['natural_key_cols'])}}
+  and {{sk}}.domain_cd='{{params['domain']}}'
+{% endfor %}
