@@ -1,6 +1,5 @@
 /*
-  Build a light integrated modeled layer from source image 
-  for entity `{{this.name.split('_', 1)[1]}}`, performing: 
+Build a light discovery layer from raw data for entity `{{this.name.split('_', 1)[1]}}`, performing: 
   - Data domain aligments (eg. using standard data types, units conversions, codes standardization...)
   - Surrogate key assigment
   - Naming conventions alignment
@@ -33,8 +32,8 @@
 
 {{ config(
     materialized='otf_materialize',
-    datalake='aws_glue_catalog',
-    datalake_database='sbx',
+    datalake=var('otf_datalake'),
+    datalake_database=var('otf_database'),
     incremental_strategy='delete+insert',
     unique_key='customer_key',
     pre_hook=surrogate_keys_hook
@@ -42,11 +41,12 @@
 }}
 
 SELECT 
-s.*
 --Surrogate key columns
 {%- for sk, params in surrogate_keys.items() %}
-,coalesce({{sk}}.{{ params['key_table'].split('_', 1)[1] }}_key,-1) {{sk}}_key
+coalesce({{sk}}.{{ params['key_table'].split('_', 1)[1] }}_key,-1) {{sk}}_key,
 {%- endfor %}
+current_timestamp customer_update_dttm,
+s.*
 from {{ ref('raw_customers') }} s
 --Surrogate key joins 
 -- this is a generic block code unpacking the surrogate key definitions in this model 

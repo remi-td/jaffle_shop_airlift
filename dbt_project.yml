@@ -17,5 +17,7 @@ clean-targets:
 
 vars:
   last_update_ts: 'last_update_ts'
+  otf_datalake: 'aws_glue_catalog'
+  otf_database: 'sbx'
 
 # comment 2
