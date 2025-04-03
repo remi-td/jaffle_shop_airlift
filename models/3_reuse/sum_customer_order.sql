@@ -1,7 +1,7 @@
 {{
   config(
     materialized='incremental',
-    unique_key=['product_cd', 'product_cd'],
+    unique_key=['customer_key', 'product_cd'],
     incremental_strategy='valid_history',
     valid_period='valid_period'
 
