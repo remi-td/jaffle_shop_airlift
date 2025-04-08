@@ -18,6 +18,6 @@ clean-targets:
 vars:
   last_update_ts: 'last_update_ts'
   otf_datalake: 'aws_glue_catalog'
-  otf_database: 'sbx'
+  otf_database: ''  #Empty string will default the OTF schema name to the dbt (database) schema name
 
 # comment 2
