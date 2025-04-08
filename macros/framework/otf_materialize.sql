@@ -28,7 +28,7 @@
   {#-- Retrieve custom configurations --#}
   {%- set datalake = config.get('datalake') -%}
   {%- set target_db = config.get('datalake_database') -%}
-  {%- if target_db is none or target_db_raw|trim == "" -%}
+  {%- if not target_db -%}
     {%- set target_db = this.schema -%}
   {%- endif -%}
 
