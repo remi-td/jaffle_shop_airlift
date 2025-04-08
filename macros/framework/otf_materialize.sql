@@ -28,6 +28,10 @@
   {#-- Retrieve custom configurations --#}
   {%- set datalake = config.get('datalake') -%}
   {%- set target_db = config.get('datalake_database') -%}
+  {%- if target_db is none or target_db_raw|trim == "" -%}
+    {%- set target_db = this.schema -%}
+  {%- endif -%}
+
   {#-- If scratch_database is defined in the variables, we will use it to store the temporary data, 
     otherwise use the current database --#}
   {%- set scratch_database = var('scratch_database', default=None) -%}
