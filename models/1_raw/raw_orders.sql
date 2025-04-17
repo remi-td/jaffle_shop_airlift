@@ -16,6 +16,6 @@ select
     source.*
     {%- if  var('last_update_ts') -%}
     ,
-    current_timestamp {{var('last_update_ts')}}
+    ($path.$extract_date (date)) (TIMESTAMP) {{var('last_update_ts')}}
     {%- endif %}
 from {{ source('s3_object_storage', 'raw_orders_nos') }} source

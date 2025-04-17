@@ -15,6 +15,6 @@ locking row for access
 select
 source.*
 {%- if  var('last_update_ts') %}
-,'{{ run_started_at }}' (timestamp) {{var('last_update_ts')}}
+,    ($path.$extract_date (date)) (TIMESTAMP) {{var('last_update_ts')}}
 {%- endif %}
 from {{ source('s3_object_storage', 'raw_payments_nos') }} source
