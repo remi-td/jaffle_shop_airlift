@@ -12,6 +12,7 @@ Copy this model and simply rename it key_{{class name}}) to create additional ke
 {{
   config(
     materialized='incremental',
+    incremental_strategy='delete+insert',
   )
 }}
 
