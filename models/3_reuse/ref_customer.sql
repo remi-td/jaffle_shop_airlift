@@ -7,7 +7,7 @@ and this makes the model on this layer coherent for its users.
 
 locking row for access
 select
-    customer_key,
-    substr(customer_nk,1,3)||'***' email
+    customer_key
+    ,REGEXP_REPLACE(customer_nk, '^(.{3})[^@]*(@.*)$', '\1***\2', 1, 1, 'i') AS email --partially mask the email
 from {{ ref('key_customer') }}
 where domain_cd = 'retail'

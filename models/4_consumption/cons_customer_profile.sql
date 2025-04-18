@@ -78,7 +78,7 @@ with customer_favourite_products as
 
     select
         customer.customer_key,
-        'Last ordered'||trim(customer_timeline.last_order_days_ago (int))||' days ago' last_order,
+        'Last ordered '||trim(customer_timeline.last_order_days_ago (int))||' days ago' last_order,
         'Has been customer for '||trim(customer_timeline.customer_for_month  (int))||' months' customer_since,
         'Customer value is '||trim(round(customer_value.value_rank*10,1) (decimal(3,1)))|| '/ 10' as customer_value,
         'Customer favourite products '||customer_favourite_products.top_ordered_products customer_favourite_products,
@@ -88,7 +88,7 @@ with customer_favourite_products as
     left join  customer_timeline on customer_timeline.customer_key=customer.customer_key
     left join  customer_favourite_products on customer_favourite_products.customer_key=customer.customer_key
     left join  everyonelse_favourite_products on everyonelse_favourite_products.customer_key=customer.customer_key
-    left join  customer_value on customer_value.customer_key=customer_value.customer_key
+    left join  customer_value on customer_value.customer_key=customer.customer_key
 )
 
 select * from final
