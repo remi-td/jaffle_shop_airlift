@@ -2,7 +2,7 @@ version: 2
 
 sources:
   - name: s3_object_storage
-    schema: "airliftuser01" #This is the database in which our foreign objects reside
+    schema: "airliftsuperuser" #We source from a common database containing the foreign tables defined below. Change for your user database name if you want to use yours.
     tables:
       - name: raw_customers_nos   
         description: "Raw customer data"
