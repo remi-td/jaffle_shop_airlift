@@ -14,7 +14,10 @@ p.payment_tstmp payment_dttm
 ,o.checkout_sum order_checkout_sum
 ,o.order_status
 ,p.id source_system_payment_id
+,cu.email
 --add the masked email from the customer reference entity here
 from {{ ref('raw_payments') }} p
 left join {{ var('otf_datalake') }}.{{ ref('disc_order') }} o
     on o.order_key = p.order_id
+left join {{ ref('ref_customer') }} cu 
+    on o.customer_key = cu.customer_key
