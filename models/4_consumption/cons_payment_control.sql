@@ -19,5 +19,5 @@ p.payment_tstmp payment_dttm
 from {{ ref('raw_payments') }} p
 left join {{ var('otf_datalake') }}.{{ ref('disc_order') }} o
     on o.order_key = p.order_id
-left outer join {{ var('otf_datalake') }}.{{ ref('ref_customer')}} c
+left outer join {{ ref('ref_customer')}} c
     on o.customer_key = c.customer_key
