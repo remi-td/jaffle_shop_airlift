@@ -1,6 +1,6 @@
 with customer_favourite_products as 
 (
-    --Let's gather our customer favourite products. 
+    --Let's gather our customer favourite products. Here it is for Airlift219
     --Since this will be consumed by a customer interaction agent, a short list will do
     sel
     customer_key
