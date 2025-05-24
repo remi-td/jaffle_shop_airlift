@@ -17,12 +17,12 @@ the valid time period calculation is implemented by the materialisation strategy
 #}
 
 select
-    o.customer_key
+    o.customer_id
     --the history logic expects LATIN ... this will need to be fixed
-    ,translate(cast(o.product_cd as VARCHAR(10) NOT CASESPECIFIC) USING UNICODE_TO_LATIN) product_cd
+    ,translate(cast(o.product_code as VARCHAR(10) NOT CASESPECIFIC) USING UNICODE_TO_LATIN) product_cd
     -- The mesure is valid as of the latest order time and until changed
-    ,period(max(order_dttm), ('9999-12-31 23:59:59.999999' (timestamp))) valid_period
+    ,period(max(order_tstmp), ('9999-12-31 23:59:59.999999' (timestamp))) valid_period
     ,sum(distinct o.quantity) customer_order_cnt
     ,sum(o.checkout_sum) customer_order_amt
-from {{ var('otf_datalake') }}.{{ ref('disc_order') }} o
+from "al210ghxMjTZ"."disc_orders" o
 group by 1, 2
