@@ -43,7 +43,8 @@ Build a light discovery layer from raw data for entity `{{this.name.split('_', 1
 SELECT 
 --Surrogate key columns
 {%- for sk, params in surrogate_keys.items() %}
-coalesce({{sk}}.{{ params['key_table'].split('_', 1)[1] }}_key,-1) {{sk}}_key,
+--coalesce({{sk}}.{{ params['key_table'].split('_', 1)[1] }}_key,-1) {{sk}}_key,
+row_number() over (order by email) as customer_key,
 {%- endfor %}
 current_timestamp customer_update_dttm,
 s.*
@@ -51,8 +52,8 @@ from {{ ref('raw_customers') }} s
 --Surrogate key joins 
 -- this is a generic block code unpacking the surrogate key definitions in this model 
 -- and appending it to the list of columns in the target entity
-{%- for sk, params in surrogate_keys.items() %}
-left join {{ref(params['key_table'])}} {{sk}}
-  on {{sk}}.{{ params['key_table'].split('_', 1)[1] }}_nk={{generate_natural_key(params['natural_key_cols'])}}
-  and {{sk}}.domain_cd='{{params['domain']}}'
+--{%- for sk, params in surrogate_keys.items() %}
+--left join {{ref(params['key_table'])}} {{sk}}
+--  on {{sk}}.{{ params['key_table'].split('_', 1)[1] }}_nk={{generate_natural_key(params['natural_key_cols'])}}
+--  and {{sk}}.domain_cd='{{params['domain']}}'
 {% endfor %}
