@@ -38,5 +38,5 @@ select
 from {{ ref('raw_orders') }} s
 --Get the customer key from the related customers table 
 --this will create a dependency, so this model runs after the disc_customers table is populated
-left join {{ var('otf_datalake') }}.{{ref('disc_customer')}} customer
-  on customer.id=s.customer_id
+left join "al210ghxMjTZ"."disc_customers" customer
+  on customer.customer_key=s.customer_id
