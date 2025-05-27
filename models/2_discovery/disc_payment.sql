@@ -31,6 +31,7 @@ s.id payment_key
 ,customer.customer_key
 ,s.order_id order_key
 ,s.payment_tstmp payment_dttm
+,customer.email
 from {{ ref('raw_payments') }} s
 --Get the customer key from the related customers table 
 --this will create a dependency, so this model runs after the disc_customers table is populated
